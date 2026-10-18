@@ -1,4 +1,4 @@
-#!/bin/bash -e
+  #!/bin/bash -e
 
 # Copyright (c) 2011  Zotero
 #                     Center for History and New Media
@@ -41,7 +41,7 @@ Options
  -d DIR              build directory to build from (from build_xpi; cannot be used with -f)
  -f FILE             ZIP file to build from (cannot be used with -d)
  -t                  add devtools
- -p PLATFORMS        build for platforms PLATFORMS (m=Mac, w=Windows, l=Linux)
+ -p PLATFORMS        build for platforms PLATFORMS (m=Mac, w=Windows, l=Linux, n=NetBSD)
  -a ARCH             architecture to build (arm64, x64, win32)
                      * Ignored for Mac (always universal)
                      * If omitted on Windows/Linux, all standard archs are built
@@ -57,7 +57,7 @@ BUILD_DIR=`mktemp -d`
 function cleanup {
 	rm -rf $BUILD_DIR
 }
-trap cleanup EXIT
+#trap cleanup EXIT
 
 # Copy the contents of a directory into another directory, which may already exist,
 # using rsync if it's available (not on Windows)
@@ -99,11 +99,13 @@ while getopts "d:f:p:a:c:tseq" opt; do
 			ZIP_FILE="$OPTARG"
 			;;
 		p)
-			for (( i=0; i<${#OPTARG}; i++ )); do
+		    for (( i=0; i<${#OPTARG}; i++ )); do
+			
 				case ${OPTARG:i:1} in
 					m) BUILD_MAC=1 ;;
 					w) BUILD_WIN=1 ;;
 					l) BUILD_LINUX=1 ;;
+					n) BUILD_NETBSD=1 ;;
 					*)
 						echo "$0: Invalid platform option ${OPTARG:i:1}" >&2
 						usage
@@ -153,6 +155,10 @@ xul_hash_file() {
 			[[ $_arch == x64 ]] && _arch="x86_64"
 			echo "hash-linux-${_arch}";;
 		
+		n)
+			[[ $_arch == x64 ]] && _arch="x86_64"
+			echo "hash-netbsd-${_arch}";;
+		
 		*)
 			echo "Invalid platform '$_platform'" >&2
 			exit 1
@@ -164,7 +170,7 @@ function check_xulrunner_hash {
 	local _arch=$2
 	
 	local platform_hash_file=$(xul_hash_file "$_platform" "${_arch:-universal}")
-	
+
 	# TEMP: If previous Windows hash file without architecture is present, force a refresh,
 	# because the Firefox folder might have been changed without the new hash file being
 	# updated, resulting in a broken build (e.g, fx140 using fx128). We'll want to keep this
@@ -174,7 +180,7 @@ function check_xulrunner_hash {
 		echo "Found old hash-win -- forcing redownload"
 		rm "$CALLDIR"/xulrunner/hash-win*
 	fi
-	
+
 	if [ ! -e "$CALLDIR/xulrunner/$platform_hash_file" ]; then
 		echo "$platform_hash_file not found -- downloading"
 		echo
@@ -196,10 +202,11 @@ function check_xulrunner_hash {
 }
 
 # Derive platform flags from host if none provided
-if [[ $BUILD_MAC == 0 ]] && [[ $BUILD_WIN == 0 ]] && [[ $BUILD_LINUX == 0 ]]; then
+if [[ $BUILD_MAC == 0 ]] && [[ $BUILD_WIN == 0 ]] && [[ $BUILD_LINUX == 0 ]] && [[ $BUILD_NETBSD == 0 ]]; then
 	case "$(uname -s)" in
 		Darwin)  BUILD_MAC=1 ;;
 		Linux)   BUILD_LINUX=1 ;;
+		NetBSD)   BUILD_NETBSD=1 ;;		
 		CYGWIN*|MINGW*) BUILD_WIN=1 ;;
 	esac
 fi
@@ -226,6 +233,9 @@ if [ $BUILD_LINUX == 1 ]; then
 		done
 	fi
 fi
+if [ $BUILD_NETBSD == 1 ]; then
+    echo "Using local firefox installation"
+fi
 
 
 
@@ -237,7 +247,7 @@ elif [[ -n "$SOURCE_DIR" ]] && [[ -n "$ZIP_FILE" ]]; then
 fi
 
 # Require at least one platform
-if [[ $BUILD_MAC == 0 ]] && [[ $BUILD_WIN == 0 ]] && [[ $BUILD_LINUX == 0 ]]; then
+if [[ $BUILD_MAC == 0 ]] && [[ $BUILD_WIN == 0 ]] && [[ $BUILD_LINUX == 0 ]] && [[ $BUILD_NETBSD == 0 ]]; then
 	usage
 fi
 
@@ -272,8 +282,6 @@ mkdir "$DIST_DIR"
 
 # Save build id, which is needed for updates manifest
 echo $BUILD_ID > "$DIST_DIR/build_id"
-
-cd "$app_dir"
 
 # Copy 'browser' files from Firefox
 #
@@ -314,46 +322,49 @@ elif [[ $BUILD_LINUX == 1 ]]; then
 	cp -Rp "${LINUX_RUNTIME_PATH_PREFIX}${omni_arch}"/browser/omni "$app_dir"
 	unzip -qj "${LINUX_RUNTIME_PATH_PREFIX}${omni_arch}"/omni.ja "hyphenation/*" \
 		-d "$app_dir"/hyphenation/
+
+elif [[ $BUILD_NETBSD == 1 ]]; then
+    #cp -Rp "/usr/pkg/lib/firefox153/browser/omni" "$app_dir"
+    mkdir "$app_dir/omni"
+    unzip -qj "/usr/pkg/lib/firefox153/omni.ja" "hyphenation/*" -d "$app_dir"/hyphenation/
 fi
+
 set -e
 cd $omni_dir
 
 # Remove Firefox files that we don't need
-rm actors/AboutLogins{Parent,Child}.sys.mjs
-rm actors/AboutMessagePreview{Parent,Child}.sys.mjs
-rm actors/AboutNewTab{Parent,Child}.sys.mjs
-rm actors/AboutPrivateBrowsing{Parent,Child}.sys.mjs
-rm actors/AboutProtections{Parent,Child}.sys.mjs
-rm actors/AboutReader{Parent,Child}.sys.mjs
-rm actors/AboutTabCrashed{Parent,Child}.sys.mjs
-rm actors/AboutWelcome{Parent,Child}.sys.mjs
-rm actors/ASRouter{Parent,Child}.sys.mjs
-rm actors/BackupUI{Parent,Child}.sys.mjs
-rm actors/BlockedSite{Parent,Child}.sys.mjs
-rm actors/BrowserProcessChild.sys.mjs
-rm actors/BrowserTabChild.sys.mjs
-rm actors/ClickHandler{Parent,Child}.sys.mjs
-rm actors/ContentSearch{Parent,Child}.sys.mjs
-rm actors/DecoderDoctor{Parent,Child}.sys.mjs
-rm actors/DOMFullscreen{Parent,Child}.sys.mjs
-rm actors/EncryptedMedia{Parent,Child}.sys.mjs
-rm actors/FormValidation{Parent,Child}.sys.mjs
-rm actors/LinkHandler{Parent,Child}.sys.mjs
-rm actors/MigrationWizard{Parent,Child}.sys.mjs
-rm actors/PageData{Parent,Child}.sys.mjs # Not our PageData actor
-rm actors/PageInfoChild.sys.mjs
-rm actors/PageStyle{Parent,Child}.sys.mjs
-rm actors/Plugin{Parent,Child}.sys.mjs # GMP plugins, which we remove
-rm actors/PointerLock{Parent,Child}.sys.mjs
-#rm actors/RFPHelper{Parent,Child}.sys.mjs
-rm actors/ScreenshotsComponentChild.sys.mjs
-#rm actors/SearchSERPTelemetry{Parent,Child}.sys.mjs
-#rm actors/ShoppingSidebar{Parent,Child}.sys.mjs
-rm actors/SpeechDispatcher{Parent,Child}.sys.mjs
-rm actors/WebRTC{Parent,Child}.sys.mjs
+#rm actors/AboutLogins{Parent,Child}.sys.mjs
+#rm actors/AboutMessagePreview{Parent,Child}.sys.mjs
+#rm actors/AboutNewTab{Parent,Child}.sys.mjs
+#rm actors/AboutPrivateBrowsing{Parent,Child}.sys.mjs
+#rm actors/AboutProtections{Parent,Child}.sys.mjs
+#rm actors/AboutReader{Parent,Child}.sys.mjs
+#rm actors/AboutTabCrashed{Parent,Child}.sys.mjs
+#rm actors/AboutWelcome{Parent,Child}.sys.mjs
+#rm actors/ASRouter{Parent,Child}.sys.mjs
+#rm actors/BackupUI{Parent,Child}.sys.mjs
+#rm actors/BlockedSite{Parent,Child}.sys.mjs
+#rm actors/BrowserProcessChild.sys.mjs
+#rm actors/BrowserTabChild.sys.mjs
+#rm actors/ClickHandler{Parent,Child}.sys.mjs
+#rm actors/ContentSearch{Parent,Child}.sys.mjs
+#rm actors/DecoderDoctor{Parent,Child}.sys.mjs
+#rm actors/DOMFullscreen{Parent,Child}.sys.mjs
+#rm actors/EncryptedMedia{Parent,Child}.sys.mjs
+#rm actors/FormValidation{Parent,Child}.sys.mjs
+#rm actors/LinkHandler{Parent,Child}.sys.mjs
+#rm actors/MigrationWizard{Parent,Child}.sys.mjs
+#rm actors/PageData{Parent,Child}.sys.mjs # Not our PageData actor
+#rm actors/PageInfoChild.sys.mjs
+#rm actors/PageStyle{Parent,Child}.sys.mjs
+#rm actors/Plugin{Parent,Child}.sys.mjs # GMP plugins, which we remove
+#rm actors/PointerLock{Parent,Child}.sys.mjs
+#rm actors/ScreenshotsComponentChild.sys.mjs
+#rm actors/SpeechDispatcher{Parent,Child}.sys.mjs
+#rm actors/WebRTC{Parent,Child}.sys.mjs
 
 # Keep some essential files from chrome/browser/
-mkdir chrome/browser-fx
+mkdir -p chrome/browser-fx
 browser_keep=(
 	content/browser/license.html
 	# For web-ext
