@@ -2,8 +2,10 @@ Zotero
 ======
 A lazy work in progress tentative to port Zotero to NetBSD
 
+Current status: *NOT WORKING*
 
-Original REAME
+
+Original README
 ======
 [![CI](https://github.com/zotero/zotero/actions/workflows/ci.yml/badge.svg)](https://github.com/zotero/zotero/actions/workflows/ci.yml)
 
