@@ -862,6 +862,8 @@ if [ $BUILD_NETBSD == 1 ]; then
 	for arch in "${arch_list[@]}"; do
 		xdir="firefox-netbsd-$arch"
 		rm -rf $xdir
+		mkdir -p /tmp/firefox
+		tar -xzf /var/db/pkgin/cache/firefox153-153.4.0.tgz -C /tmp/firefox
 	        cp -a /tmp/firefox/lib/firefox153 $xdir
 
 		mv $xdir/firefox153 $xdir/firefox
