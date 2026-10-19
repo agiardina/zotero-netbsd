@@ -2,8 +2,25 @@ Zotero
 ======
 A lazy work in progress tentative to port Zotero to NetBSD
 
-Current status: *NOT WORKING*
+Current status: it seems to work using GNU coreutils to build. These are the preresiquites steps to run out of my memory... so probably I forgot something 
 
+As root
+
+```
+pkgin install firefox153 python3.13
+pkgin install coreutils findutils gsed grep gtar gawk gmake bash diffutils
+pkgin install nodejs
+```
+
+From the project root folder:
+
+```
+mkdir -p ~/bin/
+ln -s /home/agiardina/bin/python3.13 ~/bin/python
+ln -s /usr/pkg/bin/bash /bin/bash
+export PATH=/usr/pkg/gnu/bin:$PATH
+./app/scripts/build_and_run -f
+```
 
 Original README
 ======
