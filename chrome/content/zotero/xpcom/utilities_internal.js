@@ -3130,7 +3130,7 @@ Zotero.Utilities.Internal.Environment = {
 		}
 		// macOS or Linux
 		else {
-			lib = ctypes.open(Zotero.isMac ? "/usr/lib/libSystem.dylib" : "libc.so.6");
+			lib = ctypes.open(Zotero.isMac ? "/usr/lib/libSystem.dylib" : "libc.so.12");
 			let unsetenv = lib.declare(
 				"unsetenv",
 				ctypes.default_abi,

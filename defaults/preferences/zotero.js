@@ -214,7 +214,7 @@ pref("extensions.zotero.openReaderInNewWindow", false);
 pref("extensions.zotero.openNoteInNewWindow", false);
 
 // File/URL opening executable if launch() fails
-pref("extensions.zotero.fallbackLauncher.unix", "/usr/bin/xdg-open");
+pref("extensions.zotero.fallbackLauncher.unix", "/usr/pkg/bin/xdg-open");
 pref("extensions.zotero.fallbackLauncher.windows", "");
 
 //Translators

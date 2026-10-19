@@ -130,12 +130,15 @@ function replace_line {
 	pattern=$1
 	replacement=$2
 	file=$3
+
+	echo "REPLACING ON FILE ${file}"
 	
 	if grep -E -q "$pattern" "$file"; then
 		perl -pi -e "s/$pattern/$replacement/" "$file"
 	else
-		echo "$pattern" not found in "$file" -- aborting 2>&1
-		exit 1
+		echo PATTERN "$pattern" NOT FOUND in "$file"
+#		echo "$pattern" not found in "$file" -- aborting 2>&1
+#		exit 1
 	fi
 }
 

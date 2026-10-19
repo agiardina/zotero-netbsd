@@ -87,6 +87,8 @@ elif [ "`uname`" = "Linux" ]; then
 	else
 		command="Zotero_linux-x86_64/zotero"
 	fi
+elif [ "`uname`" = "NetBSD" ]; then
+        command="Zotero_netbsd-x64/zotero"
 elif [ "`uname -o 2> /dev/null`" = "Cygwin" ]; then
 	command="Zotero_win-x64/zotero.exe"
 else

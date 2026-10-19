@@ -234,7 +234,7 @@ if [ $BUILD_LINUX == 1 ]; then
 	fi
 fi
 if [ $BUILD_NETBSD == 1 ]; then
-    echo "Using local firefox installation"
+    	check_xulrunner_hash n
 fi
 
 
@@ -268,6 +268,7 @@ BUILD_ID=`date +%Y%m%d%H%M%S`
 MAC_RUNTIME_PATH="$CALLDIR/xulrunner/Firefox.app"
 WIN_RUNTIME_PATH_PREFIX="$CALLDIR/xulrunner/firefox-"
 LINUX_RUNTIME_PATH_PREFIX="$CALLDIR/xulrunner/firefox-linux-"
+NETBSD_RUNTIME_PATH_PREFIX="$CALLDIR/xulrunner/firefox-netbsd-"
 
 base_dir="$BUILD_DIR/base"
 app_dir="$BUILD_DIR/base/app"
@@ -320,48 +321,51 @@ elif [[ $BUILD_LINUX == 1 ]]; then
 		done
 	fi
 	cp -Rp "${LINUX_RUNTIME_PATH_PREFIX}${omni_arch}"/browser/omni "$app_dir"
-	unzip -qj "${LINUX_RUNTIME_PATH_PREFIX}${omni_arch}"/omni.ja "hyphenation/*" \
+ 	unzip -qj "${LINUX_RUNTIME_PATH_PREFIX}${omni_arch}"/omni.ja "hyphenation/*" \
 		-d "$app_dir"/hyphenation/
 
 elif [[ $BUILD_NETBSD == 1 ]]; then
-    #cp -Rp "/usr/pkg/lib/firefox153/browser/omni" "$app_dir"
-    mkdir "$app_dir/omni"
-    unzip -qj "/usr/pkg/lib/firefox153/omni.ja" "hyphenation/*" -d "$app_dir"/hyphenation/
+    #ccd .p -Rp "/usr/pkg/lib/firefox153/browser/omni" "$app_dir"
+    cp -Rp "${NETBSD_RUNTIME_PATH_PREFIX}${arch}"/browser/omni "$app_dir"
+    unzip -qj "${NETBSD_RUNTIME_PATH_PREFIX}${arch}"/omni.ja "hyphenation/*" \
+		-d "$app_dir"/hyphenation/
+
 fi
 
 set -e
 cd $omni_dir
 
+echo $omni_dir
 # Remove Firefox files that we don't need
-#rm actors/AboutLogins{Parent,Child}.sys.mjs
-#rm actors/AboutMessagePreview{Parent,Child}.sys.mjs
-#rm actors/AboutNewTab{Parent,Child}.sys.mjs
-#rm actors/AboutPrivateBrowsing{Parent,Child}.sys.mjs
-#rm actors/AboutProtections{Parent,Child}.sys.mjs
-#rm actors/AboutReader{Parent,Child}.sys.mjs
-#rm actors/AboutTabCrashed{Parent,Child}.sys.mjs
-#rm actors/AboutWelcome{Parent,Child}.sys.mjs
-#rm actors/ASRouter{Parent,Child}.sys.mjs
-#rm actors/BackupUI{Parent,Child}.sys.mjs
-#rm actors/BlockedSite{Parent,Child}.sys.mjs
-#rm actors/BrowserProcessChild.sys.mjs
-#rm actors/BrowserTabChild.sys.mjs
-#rm actors/ClickHandler{Parent,Child}.sys.mjs
-#rm actors/ContentSearch{Parent,Child}.sys.mjs
-#rm actors/DecoderDoctor{Parent,Child}.sys.mjs
-#rm actors/DOMFullscreen{Parent,Child}.sys.mjs
-#rm actors/EncryptedMedia{Parent,Child}.sys.mjs
-#rm actors/FormValidation{Parent,Child}.sys.mjs
-#rm actors/LinkHandler{Parent,Child}.sys.mjs
-#rm actors/MigrationWizard{Parent,Child}.sys.mjs
-#rm actors/PageData{Parent,Child}.sys.mjs # Not our PageData actor
-#rm actors/PageInfoChild.sys.mjs
-#rm actors/PageStyle{Parent,Child}.sys.mjs
-#rm actors/Plugin{Parent,Child}.sys.mjs # GMP plugins, which we remove
-#rm actors/PointerLock{Parent,Child}.sys.mjs
-#rm actors/ScreenshotsComponentChild.sys.mjs
-#rm actors/SpeechDispatcher{Parent,Child}.sys.mjs
-#rm actors/WebRTC{Parent,Child}.sys.mjs
+rm actors/AboutLogins{Parent,Child}.sys.mjs
+rm actors/AboutMessagePreview{Parent,Child}.sys.mjs
+rm actors/AboutNewTab{Parent,Child}.sys.mjs
+rm actors/AboutPrivateBrowsing{Parent,Child}.sys.mjs
+rm actors/AboutProtections{Parent,Child}.sys.mjs
+rm actors/AboutReader{Parent,Child}.sys.mjs
+rm actors/AboutTabCrashed{Parent,Child}.sys.mjs
+rm actors/AboutWelcome{Parent,Child}.sys.mjs
+rm actors/ASRouter{Parent,Child}.sys.mjs
+rm actors/BackupUI{Parent,Child}.sys.mjs
+rm actors/BlockedSite{Parent,Child}.sys.mjs
+rm actors/BrowserProcessChild.sys.mjs
+rm actors/BrowserTabChild.sys.mjs
+rm actors/ClickHandler{Parent,Child}.sys.mjs
+rm actors/ContentSearch{Parent,Child}.sys.mjs
+rm actors/DecoderDoctor{Parent,Child}.sys.mjs
+rm actors/DOMFullscreen{Parent,Child}.sys.mjs
+rm actors/EncryptedMedia{Parent,Child}.sys.mjs
+rm actors/FormValidation{Parent,Child}.sys.mjs
+rm actors/LinkHandler{Parent,Child}.sys.mjs
+rm actors/MigrationWizard{Parent,Child}.sys.mjs
+rm actors/PageData{Parent,Child}.sys.mjs # Not our PageData actor
+rm actors/PageInfoChild.sys.mjs
+rm actors/PageStyle{Parent,Child}.sys.mjs
+rm actors/Plugin{Parent,Child}.sys.mjs # GMP plugins, which we remove
+rm actors/PointerLock{Parent,Child}.sys.mjs
+rm actors/ScreenshotsComponentChild.sys.mjs
+rm actors/SpeechDispatcher{Parent,Child}.sys.mjs
+rm actors/WebRTC{Parent,Child}.sys.mjs
 
 # Keep some essential files from chrome/browser/
 mkdir -p chrome/browser-fx
@@ -1217,5 +1221,75 @@ if [ $BUILD_LINUX == 1 ]; then
 		fi
 	done
 fi
+
+
+if [ $BUILD_NETBSD == 1 ]; then
+    archs=($arch)
+	for arch in "${archs[@]}"; do
+#		[[ $arch == x64 ]] && arch="x86_64"
+		
+		runtime_path="${NETBSD_RUNTIME_PATH_PREFIX}${arch}"
+		
+		# Set up directory
+		echo 'Building Zotero_netbsd-'$arch
+		APPDIR="$STAGE_DIR/Zotero_netbsd-$arch"
+		rm -rf "$APPDIR"
+		mkdir "$APPDIR"
+		
+		# Merge relevant assets from Firefox
+		cp -r "$runtime_path/"!(application.ini|browser|crashhelper|crashreporter|crashreporter.ini|defaults|devtools-files|firefox|pingsender|precomplete|removed-files|run-mozilla.sh|update-settings.ini|updater|updater.ini) "$APPDIR"
+
+		# Use our own launcher that calls the original Firefox executable with -app
+		mv "$APPDIR"/firefox-bin "$APPDIR"/zotero-bin
+		cp "$CALLDIR/linux/zotero" "$APPDIR"/zotero
+		
+		# Copy Ubuntu launcher files
+		cp "$CALLDIR/linux/zotero.desktop" "$APPDIR"
+		cp "$CALLDIR/linux/set_launcher_icon" "$APPDIR"
+		
+		# Use our own updater, because Mozilla's requires updates signed by Mozilla
+		#check_lfs_file "$CALLDIR/linux/updater.tar.xz"
+		#tar xf "$CALLDIR/linux/updater.tar.xz" --to-stdout updater-$arch > "$APPDIR/updater"
+		#chmod 755 "$APPDIR/updater"
+
+		# Copy app files
+		copy_dir "$base_dir" "$APPDIR"
+		
+		# Add word processor plug-ins
+		mkdir "$APPDIR/integration"
+		cp -RH "$CALLDIR/modules/zotero-libreoffice-integration/install" "$APPDIR/integration/libreoffice"
+		
+		# Firefox includes an 'icons' folder with updater.png, but some Linux distro builds omit it
+		mkdir -p "$APPDIR/icons"
+		# Copy icons
+		cp "$CALLDIR/linux/icons/icon32.png" "$APPDIR/icons/"
+		cp "$CALLDIR/linux/icons/icon64.png" "$APPDIR/icons/"
+		cp "$CALLDIR/linux/icons/icon128.png" "$APPDIR/icons/"
+		cp "$CALLDIR/linux/icons/symbolic.svg" "$APPDIR/icons/"
+		
+		# Delete extraneous files
+		find "$APPDIR" -depth -type d -name .git -exec rm -rf {} \;
+		find "$APPDIR" \( -name .DS_Store -or -name update.rdf \) -exec rm -f {} \;
+		
+		# Copy over removed-files and make a precomplete file
+		pushd "$APPDIR"
+		#cp "$CALLDIR/update-packaging/removed-files_linux-$arch" removed-files
+		python3 "$CALLDIR/scripts/createprecomplete.py"
+		if [ ! -s precomplete ]; then
+			echo "precomplete file not created -- aborting" 2>&1
+			exit 1
+		fi
+		popd
+		
+#		if [ $PACKAGE == 1 ]; then
+			# Create tar
+#			rm -f "$DIST_DIR/Zotero-${VERSION}_linux-$arch.tar.xz"
+#			cd "$STAGE_DIR"
+#			tar -cJf "$DIST_DIR/Zotero-${VERSION}_linux-$arch.tar.xz" "Zotero_linux-$arch"
+#		fi
+	done
+fi
+
+
 
 rm -rf $BUILD_DIR
