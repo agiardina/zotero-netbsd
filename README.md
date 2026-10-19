@@ -16,7 +16,7 @@ From the project root folder:
 
 ```
 mkdir -p ~/bin/
-ln -s /home/agiardina/bin/python3.13 ~/bin/python
+ln -s /usr/pkg/bin/python3.13 ~/bin/python
 ln -s /usr/pkg/bin/bash /bin/bash
 export PATH=/usr/pkg/gnu/bin:$PATH
 ./app/scripts/build_and_run -f
